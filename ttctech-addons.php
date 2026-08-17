@@ -21,3 +21,4 @@ define('TTCTECH_ADDONS_URL', plugin_dir_url(__FILE__));
 // Load modules
 require_once TTCTECH_ADDONS_DIR . 'inc/login-customizer.php';
 require_once TTCTECH_ADDONS_DIR . 'inc/admin-customizer.php';
+require_once TTCTECH_ADDONS_DIR . 'inc/widgets.php';
