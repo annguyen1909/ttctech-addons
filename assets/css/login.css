@@ -1,0 +1,125 @@
+/**
+ * TTCTech Login Page Styles
+ * Minimal branding with theme colors
+ */
+
+/* —— Font Import —— */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+/* —— Theme Colors —— */
+:root {
+	--ttc-navy: #006699;
+	--ttc-accent: #f0ca4b;
+	--ttc-text: #141e27;
+	--ttc-muted: #6f7280;
+	--ttc-bg: #f8f7fa;
+}
+
+/* —— Body Background —— */
+body.login {
+	font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+	background: var(--ttc-bg);
+}
+
+/* —— Logo Replacement —— */
+#login h1 a {
+	background-image: url('../img/logo.png');
+	background-size: contain;
+	background-position: center;
+	width: 200px;
+	height: 80px;
+	margin-bottom: 1.5rem;
+}
+
+/* —— Login Form Container —— */
+#loginform,
+#lostpasswordform {
+	border: 1px solid #e5e6ea;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+	border-radius: 8px;
+}
+
+/* —— Input Fields —— */
+.login input[type="text"],
+.login input[type="password"] {
+	font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+	border: 1px solid #e5e6ea;
+	border-radius: 4px;
+	padding: 0.5rem;
+	font-size: 0.95rem;
+}
+
+.login input[type="text"]:focus,
+.login input[type="password"]:focus {
+	border-color: var(--ttc-navy);
+	box-shadow: 0 0 0 1px var(--ttc-navy);
+	outline: none;
+}
+
+/* —— Labels —— */
+.login label {
+	font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+	color: var(--ttc-text);
+	font-size: 0.9rem;
+	font-weight: 500;
+}
+
+/* —— Submit Button —— */
+.login .button-primary {
+	background: var(--ttc-navy);
+	border: none;
+	border-radius: 4px;
+	font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+	font-weight: 600;
+	text-shadow: none;
+	box-shadow: none;
+	padding: 0.5rem 1rem;
+	font-size: 0.95rem;
+	transition: filter 0.15s ease;
+}
+
+.login .button-primary:hover,
+.login .button-primary:focus {
+	background: var(--ttc-navy);
+	filter: brightness(1.1);
+	box-shadow: none;
+}
+
+/* —— Links —— */
+#nav a,
+#backtoblog a {
+	color: var(--ttc-navy);
+	font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+	text-decoration: none;
+}
+
+#nav a:hover,
+#backtoblog a:hover {
+	color: var(--ttc-accent);
+}
+
+/* —— Message Boxes —— */
+.login .message,
+.login .success {
+	border-left-color: var(--ttc-navy);
+	font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+.login #login_error {
+	border-left-color: #dc2626;
+	font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+/* —— Privacy Link —— */
+.privacy-policy-page-link {
+	font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
+.privacy-policy-page-link a {
+	color: var(--ttc-muted);
+}
+
+/* —— Language Switcher —— */
+.language-switcher {
+	font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
