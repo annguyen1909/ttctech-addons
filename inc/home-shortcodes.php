@@ -18,6 +18,42 @@ function ttc_home_asset($file) {
 	return get_stylesheet_directory_uri() . '/assets/img/' . ltrim($file, '/');
 }
 
+/** The demo homepage predates the Gutenberg section wrappers used locally. */
+function ttc_home_is_legacy_page() {
+	global $post;
+	if (!($post instanceof WP_Post)) {
+		return false;
+	}
+	$content = (string) $post->post_content;
+	return strpos($content, '[ttc_home_hero') !== false
+		&& strpos($content, 'ttc-home-section') === false;
+}
+
+/** Wrap shortcode content only for the legacy shortcode-only homepage. */
+function ttc_home_legacy_section($class, $heading, $content, $options = []) {
+	if (!ttc_home_is_legacy_page()) {
+		return $content;
+	}
+	$options = wp_parse_args($options, [
+		'intro' => '',
+		'eyebrow' => '',
+		'head_class' => '',
+		'after' => '',
+	]);
+	$head_class = trim('ttc-home-section__head ' . $options['head_class']);
+	$head = '<div class="' . esc_attr($head_class) . '">';
+	if ($options['eyebrow']) {
+		$head .= '<p class="ttc-home-eyebrow">' . esc_html($options['eyebrow']) . '</p>';
+	}
+	$head .= '<h2>' . esc_html($heading) . '</h2>';
+	if ($options['intro']) {
+		$head .= '<p>' . esc_html($options['intro']) . '</p>';
+	}
+	$head .= '</div>';
+	return '<section class="ttc-home-section ' . esc_attr($class) . '"><div class="ttc-container">'
+		. $head . $content . $options['after'] . '</div></section>';
+}
+
 /**
  * [ttc_phone] — canonical site phone number (single source, see ttc_phone()).
  * Use inside page/FAQ content so every mention stays in sync.
@@ -36,6 +72,40 @@ add_shortcode('ttc_phone', function ($atts) {
  * [ttc_home_categories] — curated order + icons, links to category.
  * ------------------------------------------------------------------ */
 add_shortcode('ttc_home_categories', function () {
+	if (ttc_home_is_legacy_page()) {
+		$shop = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('shop') : home_url('/shop/');
+		$labels = [
+			['Dụng cụ cắt', 'cat-1.png'],
+			['Dụng cụ đo', 'cat-2.png'],
+			['Gá kẹp dao', 'cat-3.png'],
+			['Gá kẹp phôi', 'cat-4.png'],
+			['Dầu cắt gọt', 'cat-5.png'],
+			['Dụng cụ phụ trợ', 'cat-6.png'],
+			['Máy công cụ', 'cat-7.png'],
+			['Dịch vụ', 'cat-8.png'],
+		];
+		ob_start();
+		echo '<ul class="ttc-home-cats__grid">';
+		foreach ($labels as [$label, $file]) {
+			$term = get_term_by('name', $label, 'product_cat');
+			$url = $term && !is_wp_error($term) ? get_term_link($term) : $shop;
+			if (is_wp_error($url)) {
+				$url = $shop;
+			}
+			printf(
+				'<li><a href="%s"><span class="ttc-home-cats__icon"><img src="%s" alt="" width="96" height="96" loading="eager" decoding="async" /></span><span class="ttc-home-cats__label">%s</span></a></li>',
+				esc_url($url),
+				esc_url(ttc_home_asset('home/cat/' . $file)),
+				esc_html($label)
+			);
+		}
+		echo '</ul>';
+		$content = ob_get_clean();
+		$after = '<div class="ttc-home-section__cta"><a class="ttc-btn ttc-btn--primary" href="'
+			. esc_url($shop) . '">Xem tất cả</a></div>';
+		return ttc_home_legacy_section('ttc-home-cats', 'Danh mục sản phẩm', $content, ['after' => $after]);
+	}
+
 	// Native WooCommerce categories: name = label, term thumbnail = icon.
 	// Managed in Sản phẩm → Danh mục (image) + ACF fields "Hiện trên trang chủ"
 	// / "Thứ tự trang chủ" per term. No hardcoded labels or icon files.
@@ -171,20 +241,38 @@ add_shortcode('ttc_home_projects', function () {
 		'orderby' => 'date',
 		'order' => 'ASC',
 	]);
+	if (!$projects && ttc_home_is_legacy_page()) {
+		$contact = function_exists('ttc_contact_url') ? ttc_contact_url() : home_url('/lien-he/');
+		foreach ([
+			['Gia công khuôn mẫu chính xác', 'Cung cấp dao phay và dụng cụ đo cho dây chuyền gia công khuôn mẫu yêu cầu độ chính xác cao.', 'Sai số ± 0.005 mm', 'Độ chính xác', '45 ngày', 'Thời gian triển khai', 'p1.jpg'],
+			['Sản xuất linh kiện hàng không', 'Đồng bộ dụng cụ cắt và quy trình kiểm soát chất lượng cho linh kiện đạt tiêu chuẩn khắt khe.', '100% đạt chuẩn', 'Tỷ lệ đạt', '60 ngày', 'Thời gian triển khai', 'p2.jpg'],
+			['Dây chuyền CNC tự động', 'Tư vấn dao cụ và thông số cắt tối ưu năng suất cho dây chuyền CNC vận hành liên tục.', '+30% năng suất', 'Hiệu suất', '90 ngày', 'Thời gian triển khai', 'p3.jpg'],
+			['Gia công chi tiết y tế', 'Lựa chọn dụng cụ và grade phù hợp cho chi tiết y tế yêu cầu độ bóng bề mặt cao.', 'Ra ≤ 0.4 μm', 'Độ bóng bề mặt', '30 ngày', 'Thời gian triển khai', 'p4.jpg'],
+		] as $i => [$title, $desc, $stat, $stat_label, $days, $days_label, $img]) {
+			$projects[] = (object) [
+				'ID' => 0,
+				'post_title' => $title,
+				'post_content' => $desc,
+				'post_excerpt' => '',
+				'legacy' => compact('contact', 'stat', 'stat_label', 'days', 'days_label', 'img'),
+			];
+		}
+	}
 	if (!$projects) {
 		return '';
 	}
 	ob_start();
 	echo '<ul class="ttc-home-projects__grid">';
 	foreach ($projects as $project) {
-		$link = get_permalink($project);
-		$img = get_the_post_thumbnail_url($project, 'large') ?: ttc_home_asset('home/projects/p1.jpg');
+		$legacy = $project->legacy ?? null;
+		$link = $legacy['contact'] ?? get_permalink($project);
+		$img = $legacy ? ttc_home_asset('home/projects/' . $legacy['img']) : (get_the_post_thumbnail_url($project, 'large') ?: ttc_home_asset('home/projects/p1.jpg'));
 		$desc = $project->post_content ?: $project->post_excerpt;
 
-		$stat = get_post_meta($project->ID, '_ttc_stat', true);
-		$stat_label = get_post_meta($project->ID, '_ttc_stat_label', true);
-		$days = get_post_meta($project->ID, '_ttc_days', true);
-		$days_label = get_post_meta($project->ID, '_ttc_days_label', true);
+		$stat = $legacy['stat'] ?? get_post_meta($project->ID, '_ttc_stat', true);
+		$stat_label = $legacy['stat_label'] ?? get_post_meta($project->ID, '_ttc_stat_label', true);
+		$days = $legacy['days'] ?? get_post_meta($project->ID, '_ttc_days', true);
+		$days_label = $legacy['days_label'] ?? get_post_meta($project->ID, '_ttc_days_label', true);
 
 		// Fallback: parse "stat · days" out of the excerpt if meta is unset.
 		if (($stat === '' || $days === '') && strpos((string) $project->post_excerpt, ' · ') !== false) {
@@ -205,10 +293,10 @@ add_shortcode('ttc_home_projects', function () {
 			'<a class="ttc-home-project__media" href="%s"><img src="%s" alt="%s" loading="lazy" decoding="async" /></a>',
 			esc_url($link),
 			esc_url($img),
-			esc_attr(get_the_title($project))
+			esc_attr($project->post_title)
 		);
 		echo '<div class="ttc-home-project__body">';
-		printf('<h3><a href="%s">%s</a></h3>', esc_url($link), esc_html(get_the_title($project)));
+		printf('<h3><a href="%s">%s</a></h3>', esc_url($link), esc_html($project->post_title));
 		printf('<p>%s</p>', esc_html($desc));
 		if ($stat || $days) {
 			echo '<div class="ttc-home-project__metrics">';
@@ -231,7 +319,14 @@ add_shortcode('ttc_home_projects', function () {
 		echo '</div></li>';
 	}
 	echo '</ul>';
-	return ob_get_clean();
+	$content = ob_get_clean();
+	$after = '<div class="ttc-home-section__cta"><a class="ttc-btn ttc-btn--primary" href="'
+		. esc_url(home_url('/#du-an')) . '">Xem tất cả dự án</a></div>';
+	return ttc_home_legacy_section('ttc-home-projects', 'Dự án tiêu biểu', $content, [
+		'eyebrow' => 'Giải pháp gia công của TTCTECH',
+		'intro' => 'Một số hạng mục TTCTECH đã đồng hành cùng khách hàng trong gia công và trang bị dụng cụ.',
+		'after' => $after,
+	]);
 });
 
 /* ------------------------------------------------------------------ *
@@ -324,7 +419,74 @@ add_shortcode('ttc_home_about', function () {
 	</div>
 </div>
 	<?php
-	return ob_get_clean();
+	$content = ob_get_clean();
+	return ttc_home_legacy_section('ttc-home-about', 'Về chúng tôi', $content, [
+		'intro' => 'TTCTECH cung cấp dụng cụ cắt gọt, thiết bị đo lường và giải pháp gia công cơ khí chính hãng, đồng hành cùng doanh nghiệp tối ưu năng suất và chi phí vận hành.',
+	]);
+});
+
+/* Legacy shortcode API used by the existing demo homepage. */
+add_shortcode('ttc_home_hero', function () {
+	$contact = function_exists('ttc_contact_url') ? ttc_contact_url() : home_url('/lien-he/');
+	$bg = ttc_home_asset('home/hero.jpg');
+	return '<section class="ttc-home-hero" style="--ttc-home-hero: url(\'' . esc_url($bg) . '\')">'
+		. '<div class="ttc-home-hero__inner">'
+		. '<h1>Giải Pháp Công Cụ Cắt Gọt &amp; Thiết Bị Gia Công Cơ Khí Chính Hãng</h1>'
+		. '<p>Đối tác tin cậy cung cấp dụng cụ cắt, thiết bị đo và giải pháp gia công giúp nhà máy tối ưu năng suất và chi phí.</p>'
+		. '<a class="ttc-btn ttc-btn--primary" href="' . esc_url($contact) . '">Liên hệ tư vấn</a>'
+		. '</div></section>';
+});
+
+add_shortcode('ttc_home_brands', function () {
+	if (!function_exists('ttc_brand_catalog')) {
+		return '';
+	}
+	$shop = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('shop') : home_url('/shop/');
+	$items = '';
+	foreach (ttc_brand_catalog() as $brand) {
+		$url = add_query_arg('ttc_brand', $brand['slug'], $shop);
+		$label = $brand['label'] ?? $brand['name'];
+		$items .= '<a class="ttc-home-brands__tile" href="' . esc_url($url) . '"><img src="'
+			. esc_url($brand['img']) . '" alt="' . esc_attr($label) . '" loading="lazy" /></a>';
+	}
+	return '<section class="ttc-home-section ttc-home-brands" id="thuong-hieu"><div class="ttc-container">'
+		. '<div class="ttc-home-section__head"><h2>Thương hiệu nổi bật</h2></div>'
+		. '<div class="ttc-home-brands__grid">' . $items . '</div></div></section>';
+});
+
+add_shortcode('ttc_home_featured_products', function () {
+	$content = do_shortcode('[ttc_home_products]');
+	if (!$content) {
+		return '';
+	}
+	$shop = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('shop') : home_url('/shop/');
+	$banner = '<figure class="ttc-home-products__banner"><img src="'
+		. esc_url(ttc_home_asset('home/banner.jpg'))
+		. '" alt="Gia công cơ khí" loading="eager" decoding="async" width="1280" height="420" /></figure>';
+	$after = '<div class="ttc-home-section__cta"><a class="ttc-btn ttc-btn--primary" href="'
+		. esc_url($shop) . '">Xem tất cả</a></div>';
+	return ttc_home_legacy_section('ttc-home-products', 'Sản phẩm tiêu biểu', $banner . $content, [
+		'head_class' => 'ttc-home-section__head--left',
+		'after' => $after,
+	]);
+});
+
+add_shortcode('ttc_home_posts', function () {
+	$content = do_shortcode('[ttc_home_knowledge]');
+	if (!$content) {
+		return '';
+	}
+	$archive = get_permalink((int) get_option('page_for_posts')) ?: home_url('/kinh-nghiem-ky-thuat/');
+	$after = '<div class="ttc-home-section__cta"><a class="ttc-btn ttc-btn--primary" href="'
+		. esc_url($archive) . '">Xem tất cả</a></div>';
+	return ttc_home_legacy_section('ttc-home-knowledge', 'Chia sẻ kinh nghiệm kỹ thuật', $content, [
+		'head_class' => 'ttc-home-section__head--left',
+		'after' => $after,
+	]);
+});
+
+add_shortcode('ttc_home_support', function () {
+	return do_shortcode('[ttc_support]');
 });
 
 /* The shared CF7 form already contains intentional block markup. */
