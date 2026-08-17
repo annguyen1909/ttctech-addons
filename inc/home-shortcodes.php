@@ -37,21 +37,34 @@ function ttc_home_legacy_section($class, $heading, $content, $options = []) {
 	$options = wp_parse_args($options, [
 		'intro' => '',
 		'eyebrow' => '',
-		'head_class' => '',
+		'center' => false,
+		'id' => '',
+		'heading_html' => '',
 		'after' => '',
 	]);
-	$head_class = trim('ttc-home-section__head ' . $options['head_class']);
-	$head = '<div class="' . esc_attr($head_class) . '">';
+	$head = '';
 	if ($options['eyebrow']) {
-		$head .= '<p class="ttc-home-eyebrow">' . esc_html($options['eyebrow']) . '</p>';
+		$head .= '<p class="has-text-align-center ttc-home-eyebrow wp-block-paragraph">' . esc_html($options['eyebrow']) . '</p>';
 	}
-	$head .= '<h2>' . esc_html($heading) . '</h2>';
+	$heading_class = 'wp-block-heading' . ($options['center'] ? ' has-text-align-center' : '');
+	$head .= $options['heading_html']
+		? $options['heading_html']
+		: '<h2 class="' . esc_attr($heading_class) . '">' . esc_html($heading) . '</h2>';
 	if ($options['intro']) {
-		$head .= '<p>' . esc_html($options['intro']) . '</p>';
+		$intro_class = $options['center'] ? 'has-text-align-center wp-block-paragraph' : 'wp-block-paragraph';
+		$head .= '<p class="' . esc_attr($intro_class) . '">' . esc_html($options['intro']) . '</p>';
 	}
-	$head .= '</div>';
-	return '<section class="ttc-home-section ' . esc_attr($class) . '"><div class="ttc-container">'
-		. $head . $content . $options['after'] . '</div></section>';
+	$id = $options['id'] ? ' id="' . esc_attr($options['id']) . '"' : '';
+	return '<div class="wp-block-group ttc-home-section ' . esc_attr($class) . ' is-layout-constrained wp-block-group-is-layout-constrained"' . $id . '>'
+		. $head . $content . $options['after'] . '</div>';
+}
+
+/** Match the Gutenberg button markup used by the local homepage. */
+function ttc_home_legacy_cta($url, $label) {
+	return '<div class="wp-block-buttons ttc-home-section__cta is-content-justification-center is-layout-flex wp-block-buttons-is-layout-flex">'
+		. '<div class="wp-block-button ttc-btn ttc-btn--primary is-style-fill">'
+		. '<a class="wp-block-button__link wp-element-button" href="' . esc_url($url) . '">' . esc_html($label) . '</a>'
+		. '</div></div>';
 }
 
 /**
@@ -93,17 +106,20 @@ add_shortcode('ttc_home_categories', function () {
 				$url = $shop;
 			}
 			printf(
-				'<li><a href="%s"><span class="ttc-home-cats__icon"><img src="%s" alt="" width="96" height="96" loading="eager" decoding="async" /></span><span class="ttc-home-cats__label">%s</span></a></li>',
+				'<li><a href="%s"><span class="ttc-home-cats__icon"><img src="%s" alt="%s" width="96" height="96" loading="lazy" decoding="async" /></span><span class="ttc-home-cats__label">%s</span></a></li>',
 				esc_url($url),
 				esc_url(ttc_home_asset('home/cat/' . $file)),
+				esc_attr($label),
 				esc_html($label)
 			);
 		}
 		echo '</ul>';
 		$content = ob_get_clean();
-		$after = '<div class="ttc-home-section__cta"><a class="ttc-btn ttc-btn--primary" href="'
-			. esc_url($shop) . '">Xem tất cả</a></div>';
-		return ttc_home_legacy_section('ttc-home-cats', 'Danh mục sản phẩm', $content, ['after' => $after]);
+		$heading = '<div class="wp-block-group ttc-home-section__head ttc-home-section__head--row is-content-justification-space-between is-layout-flex wp-block-group-is-layout-flex">'
+			. '<h2 class="wp-block-heading">Danh mục sản phẩm</h2>'
+			. '<p class="ttc-home-link wp-block-paragraph"><a href="' . esc_url($shop) . '">Xem tất cả</a></p>'
+			. '</div>';
+		return ttc_home_legacy_section('ttc-home-cats', 'Danh mục sản phẩm', $content, ['heading_html' => $heading]);
 	}
 
 	// Native WooCommerce categories: name = label, term thumbnail = icon.
@@ -320,12 +336,11 @@ add_shortcode('ttc_home_projects', function () {
 	}
 	echo '</ul>';
 	$content = ob_get_clean();
-	$after = '<div class="ttc-home-section__cta"><a class="ttc-btn ttc-btn--primary" href="'
-		. esc_url(home_url('/#du-an')) . '">Xem tất cả dự án</a></div>';
 	return ttc_home_legacy_section('ttc-home-projects', 'Dự án tiêu biểu', $content, [
 		'eyebrow' => 'Giải pháp gia công của TTCTECH',
 		'intro' => 'Một số hạng mục TTCTECH đã đồng hành cùng khách hàng trong gia công và trang bị dụng cụ.',
-		'after' => $after,
+		'center' => true,
+		'id' => 'du-an',
 	]);
 });
 
@@ -389,39 +404,39 @@ add_shortcode('ttc_home_about', function () {
 		[ttc_home_field('about_s2_num', '45+'), ttc_home_field('about_s2_label', 'Thương hiệu')],
 		[ttc_home_field('about_s3_num', '58+'), ttc_home_field('about_s3_label', 'Chuyên gia kỹ thuật')],
 	];
-	$check = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
 	ob_start();
 	?>
-<div class="ttc-home-about__grid">
-	<div class="ttc-home-about__media">
-		<img class="ttc-home-about__img" src="<?php echo esc_url($img); ?>" alt="Đội ngũ kỹ thuật TTCTECH" loading="lazy" decoding="async" width="560" height="440" />
+<div class="wp-block-columns ttc-home-about__grid is-layout-flex wp-block-columns-is-layout-flex">
+	<div class="wp-block-column ttc-home-about__media is-layout-flow wp-block-column-is-layout-flow">
+		<figure class="wp-block-image size-full ttc-home-about__img"><img src="<?php echo esc_url($img); ?>" alt="Đội ngũ kỹ thuật TTCTECH" loading="lazy" decoding="async" width="560" height="440" /></figure>
 	</div>
-	<div class="ttc-home-about__copy">
-		<h3 class="ttc-home-about__subtitle"><?php echo esc_html($mission_title); ?></h3>
-		<p class="ttc-home-about__body"><?php echo esc_html($mission); ?></p>
-		<div class="ttc-home-about__values">
-			<p class="ttc-home-about__values-title"><?php echo esc_html($values_title); ?></p>
-			<ul>
-				<?php foreach ($values as [$title, $desc]) : ?>
-				<li>
-					<span class="ttc-home-about__values-icon" aria-hidden="true"><?php echo $check; ?></span>
-					<span class="ttc-home-about__values-text"><strong><?php echo esc_html($title); ?></strong><em><?php echo esc_html($desc); ?></em></span>
-				</li>
-				<?php endforeach; ?>
-			</ul>
-		</div>
-		<div class="ttc-home-about__stats">
-			<?php foreach ($stats as [$num, $label]) : ?>
-			<div><strong><?php echo esc_html($num); ?></strong><span><?php echo esc_html($label); ?></span></div>
+	<div class="wp-block-column ttc-home-about__copy is-layout-flow wp-block-column-is-layout-flow">
+		<h3 class="wp-block-heading ttc-home-about__subtitle"><?php echo esc_html($mission_title); ?></h3>
+		<p class="ttc-home-about__body wp-block-paragraph"><?php echo esc_html($mission); ?></p>
+		<div class="wp-block-group ttc-home-about__values is-layout-flow wp-block-group-is-layout-flow">
+			<p class="ttc-home-about__values-title wp-block-paragraph"><?php echo esc_html($values_title); ?></p>
+			<?php foreach ($values as [$title, $desc]) : ?>
+			<div class="wp-block-group ttc-home-about__value is-layout-flow wp-block-group-is-layout-flow">
+				<div class="wp-block-group ttc-home-about__value-text is-layout-flow wp-block-group-is-layout-flow">
+					<p class="ttc-home-about__value-title wp-block-paragraph"><strong><?php echo esc_html($title); ?></strong></p>
+					<p class="ttc-home-about__value-desc wp-block-paragraph"><?php echo esc_html($desc); ?></p>
+				</div>
+			</div>
 			<?php endforeach; ?>
 		</div>
-		<a class="ttc-btn ttc-btn--primary" href="<?php echo esc_url($about_url); ?>"><?php echo esc_html($cta_text); ?></a>
+		<div class="wp-block-columns ttc-home-about__stats is-layout-flex wp-block-columns-is-layout-flex">
+			<?php foreach ($stats as [$num, $label]) : ?>
+			<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow"><p class="ttc-home-about__stat-num wp-block-paragraph"><strong><?php echo esc_html($num); ?></strong></p><p class="wp-block-paragraph"><?php echo esc_html($label); ?></p></div>
+			<?php endforeach; ?>
+		</div>
+		<div class="wp-block-buttons is-layout-flex wp-block-buttons-is-layout-flex"><div class="wp-block-button ttc-btn ttc-btn--primary is-style-fill"><a class="wp-block-button__link wp-element-button" href="<?php echo esc_url($about_url); ?>"><?php echo esc_html($cta_text); ?></a></div></div>
 	</div>
 </div>
 	<?php
 	$content = ob_get_clean();
 	return ttc_home_legacy_section('ttc-home-about', 'Về chúng tôi', $content, [
 		'intro' => 'TTCTECH cung cấp dụng cụ cắt gọt, thiết bị đo lường và giải pháp gia công cơ khí chính hãng, đồng hành cùng doanh nghiệp tối ưu năng suất và chi phí vận hành.',
+		'center' => true,
 	]);
 });
 
@@ -442,16 +457,40 @@ add_shortcode('ttc_home_brands', function () {
 		return '';
 	}
 	$shop = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('shop') : home_url('/shop/');
+	$brands = ttc_brand_catalog();
+	if (!$brands && ttc_home_is_legacy_page()) {
+		$brands = [];
+		foreach ([
+			['Sandvik', 'sandvik', 'brand_1.jpg'],
+			['Taegutec', 'taegutec', 'brand_2.jpg'],
+			['OSG', 'osg', 'brand_3.jpg'],
+			['YG', 'yg', 'brand_4.jpg'],
+			['Guhring', 'guhring', 'brand_5.jpg'],
+			['Widin', 'widin', 'brand_6.jpg'],
+			['UFS', 'ufs', 'brand_7.jpg'],
+			['ZCC', 'zcc', 'brand_8.jpg'],
+			['SEC', 'sec', 'brand_9.jpg'],
+			['Mahr', 'mahr', 'brand_10.jpg'],
+			['Dasqua', 'dasqua', 'brand_11.jpg'],
+			['Samchully', 'samchully', 'brand_16.jpg'],
+		] as [$name, $slug, $file]) {
+			$brands[] = ['name' => $name, 'label' => $name, 'slug' => $slug, 'img' => ttc_home_asset('brands/' . $file)];
+		}
+	}
 	$items = '';
-	foreach (ttc_brand_catalog() as $brand) {
+	foreach ($brands as $brand) {
 		$url = add_query_arg('ttc_brand', $brand['slug'], $shop);
 		$label = $brand['label'] ?? $brand['name'];
 		$items .= '<a class="ttc-home-brands__tile" href="' . esc_url($url) . '"><img src="'
 			. esc_url($brand['img']) . '" alt="' . esc_attr($label) . '" loading="lazy" /></a>';
 	}
-	return '<section class="ttc-home-section ttc-home-brands" id="thuong-hieu"><div class="ttc-container">'
-		. '<div class="ttc-home-section__head"><h2>Thương hiệu nổi bật</h2></div>'
-		. '<div class="ttc-home-brands__grid">' . $items . '</div></div></section>';
+	if (!$items) {
+		return '';
+	}
+	return ttc_home_legacy_section('ttc-home-brands', 'Thương hiệu nổi bật', '<div class="ttc-home-brands__grid">' . $items . '</div>', [
+		'center' => true,
+		'id' => 'thuong-hieu',
+	]);
 });
 
 add_shortcode('ttc_home_featured_products', function () {
@@ -460,13 +499,11 @@ add_shortcode('ttc_home_featured_products', function () {
 		return '';
 	}
 	$shop = function_exists('wc_get_page_permalink') ? wc_get_page_permalink('shop') : home_url('/shop/');
-	$banner = '<figure class="ttc-home-products__banner"><img src="'
+	$banner = '<figure class="wp-block-image size-full ttc-home-products__banner"><img src="'
 		. esc_url(ttc_home_asset('home/banner.jpg'))
 		. '" alt="Gia công cơ khí" loading="eager" decoding="async" width="1280" height="420" /></figure>';
-	$after = '<div class="ttc-home-section__cta"><a class="ttc-btn ttc-btn--primary" href="'
-		. esc_url($shop) . '">Xem tất cả</a></div>';
+	$after = ttc_home_legacy_cta($shop, 'Xem tất cả');
 	return ttc_home_legacy_section('ttc-home-products', 'Sản phẩm tiêu biểu', $banner . $content, [
-		'head_class' => 'ttc-home-section__head--left',
 		'after' => $after,
 	]);
 });
@@ -477,10 +514,8 @@ add_shortcode('ttc_home_posts', function () {
 		return '';
 	}
 	$archive = get_permalink((int) get_option('page_for_posts')) ?: home_url('/kinh-nghiem-ky-thuat/');
-	$after = '<div class="ttc-home-section__cta"><a class="ttc-btn ttc-btn--primary" href="'
-		. esc_url($archive) . '">Xem tất cả</a></div>';
+	$after = ttc_home_legacy_cta($archive, 'Xem tất cả');
 	return ttc_home_legacy_section('ttc-home-knowledge', 'Chia sẻ kinh nghiệm kỹ thuật', $content, [
-		'head_class' => 'ttc-home-section__head--left',
 		'after' => $after,
 	]);
 });

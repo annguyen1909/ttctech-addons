@@ -3,7 +3,7 @@
  * Plugin Name: TTCTech Addons
  * Plugin URI: https://ttctech.vn
  * Description: Custom functionality and branding for TTCTech website
- * Version: 1.1.1
+ * Version: 1.1.2
  * Author: TTCTech
  * Author URI: https://ttctech.vn
  * License: GPL v2 or later
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('TTCTECH_ADDONS_VERSION', '1.1.1');
+define('TTCTECH_ADDONS_VERSION', '1.1.2');
 define('TTCTECH_ADDONS_DIR', plugin_dir_path(__FILE__));
 define('TTCTECH_ADDONS_URL', plugin_dir_url(__FILE__));
 
