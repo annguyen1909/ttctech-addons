@@ -3,7 +3,7 @@
  * Plugin Name: TTCTech Addons
  * Plugin URI: https://ttctech.vn
  * Description: Custom functionality and branding for TTCTech website
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: TTCTech
  * Author URI: https://ttctech.vn
  * License: GPL v2 or later
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-define('TTCTECH_ADDONS_VERSION', '1.0.0');
+define('TTCTECH_ADDONS_VERSION', '1.1.0');
 define('TTCTECH_ADDONS_DIR', plugin_dir_path(__FILE__));
 define('TTCTECH_ADDONS_URL', plugin_dir_url(__FILE__));
 
@@ -22,3 +22,8 @@ define('TTCTECH_ADDONS_URL', plugin_dir_url(__FILE__));
 require_once TTCTECH_ADDONS_DIR . 'inc/login-customizer.php';
 require_once TTCTECH_ADDONS_DIR . 'inc/admin-customizer.php';
 require_once TTCTECH_ADDONS_DIR . 'inc/widgets.php';
+
+// Site functionality must survive a theme change.
+require_once TTCTECH_ADDONS_DIR . 'inc/projects.php';
+require_once TTCTECH_ADDONS_DIR . 'inc/home-acf-fields.php';
+require_once TTCTECH_ADDONS_DIR . 'inc/home-shortcodes.php';
